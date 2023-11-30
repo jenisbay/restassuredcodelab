@@ -10,7 +10,9 @@ import org.testng.annotations.Test;
 import java.time.Clock;
 import java.util.List;
 
+import static io.restassured.RestAssured.get;
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
 
 public class ReqResTest {
 
@@ -20,8 +22,7 @@ public class ReqResTest {
     public void checkAvatarAndIdTest() {
         Specification.installSpecification(Specification.requestSpec(BASE_URL), Specification.responseSpecOk200());
 
-        List<UserData> users = given()
-                .get("api/users?page=2")
+        List<UserData> users = get("api/users?page=2")
                 .then().log().all()
                 .extract().body().jsonPath().getList("data", UserData.class);
 
@@ -44,21 +45,27 @@ public class ReqResTest {
         String lastname = "Weaver";
         String avatar = "https://reqres.in/img/faces/2-image.jpg";
 
-        Response response = given()
-                .when()
-                .get("api/users/2")
-                .then()
+
+        Response response = given().expect().statusCode(200).
+                when().
+                get("api/users/2").
+                then().
+                body("data.id", equalTo(id)).
+                body("data.email", equalTo(email)).
+                body("data.first_name", equalTo(firstname)).
+                body("data.last_name", equalTo(lastname)).
+                body("data.avatar", equalTo(avatar))
                 .extract().response();
 
-        UserData userData = response.body().jsonPath().getObject("data", UserData.class);
-
-        Assert.assertEquals(id, userData.getId());
-        Assert.assertEquals(email, userData.getEmail());
-        Assert.assertEquals(firstname, userData.getFirst_name());
-        Assert.assertEquals(lastname, userData.getLast_name());
-        Assert.assertEquals(avatar, userData.getAvatar());
-
-        Assert.assertEquals(200, response.statusCode());
+//        UserData userData = response.body().jsonPath().getObject("data", UserData.class);
+//
+//        Assert.assertEquals(id, userData.getId());
+//        Assert.assertEquals(email, userData.getEmail());
+//        Assert.assertEquals(firstname, userData.getFirst_name());
+//        Assert.assertEquals(lastname, userData.getLast_name());
+//        Assert.assertEquals(avatar, userData.getAvatar());
+//
+//        Assert.assertEquals(200, response.statusCode());
     }
 
     @Test
@@ -209,7 +216,7 @@ public class ReqResTest {
     }
 
     @Test
-    public void loginUnSuccessTest(){
+    public void loginUnSuccessTest() {
         Specification.installSpecification(Specification.requestSpec(BASE_URL), Specification.responseSpecError400());
 
         String email = "peter@klaven";
@@ -229,7 +236,7 @@ public class ReqResTest {
     }
 
     @Test
-    public void delayedResponseTest(){
+    public void delayedResponseTest() {
         Specification.installSpecification(Specification.requestSpec(BASE_URL), Specification.responseSpecOk200());
 
         List<UserData> users = given()
